@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:abcd@1234@localhost:3306/nodejs-test"
+}
+
+model CpReportCb_benson {
+  id             Int        @id @default(autoincrement())
+  apikey         String?
+  cpid           String?
+  cp_online      CpOnlineType?
+  cmd            CmdType?
+  current_status CpStatusType?
+  data1          String?
+  data2          String?
+  data3          String?
+  data4          String?
+  data5          String?
+  data6          String?
+}
+
+enum CpStatusType {
+  Available
+  Preparing
+  Charging
+  Finishing
+}
+
+enum CmdType {
+  cmd_start_charging
+  cmd_stop_charging
+  get_cp_status
+  report_cp_status
+}
+
+enum CpOnlineType {
+  online
+  offline
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  acc          String         @unique
+  provider     Provider
+  profile      Profile?
+  profileId    Int            @unique
+  createdAt    DateTime       @default(now())
+  updateAt     DateTime       @updatedAt
+  Car          Car[]
+  ChargingTx   ChargingTx[]
+  RechargingTx RechargingTx[]
+}
+
+enum Provider {
+  phone
+  google
+  line
+}
+
+model Profile {
+  id       Int      @id @default(autoincrement())
+  email    String
+  mobile   String
+  fullName String
+  nickName String
+  birth    DateTime
+  gender   Gender
+  city     String
+  area     String
+  addr     String
+  user     User     @relation(fields: [userId], references: [id])
+  userId   Int      @unique
+  Car      Car[]
+  updateAt DateTime @updatedAt
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+model Car {
+  id        Int      @id @default(autoincrement())
+  brand     String
+  model     String
+  carNo     String
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  Profile   Profile? @relation(fields: [profileId], references: [id])
+  profileId Int?
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+model Station {
+  id         Int          @id @default(autoincrement())
+  name       String
+  available  Boolean
+  parkFee    String
+  feeDesc    String
+  cps        CPile[]
+  addr       String
+  createdAt  DateTime     @default(now())
+  updateAt   DateTime     @updatedAt
+  ChargingTx ChargingTx[]
+}
+
+model CPile {
+  id             Int          @id @default(autoincrement())
+  name           String
+  kW             Float
+  parkStyle      String
+  current_status String
+  createdAt      DateTime     @default(now())
+  updateAt       DateTime     @updatedAt
+  Station        Station?     @relation(fields: [stationId], references: [id])
+  stationId      Int?
+  ChargingTx     ChargingTx[]
+}
+
+model ChargingTx {
+  id        Int      @id @default(autoincrement())
+  station   Station  @relation(fields: [stationId], references: [id])
+  stationId Int
+  cpile     CPile    @relation(fields: [cpileId], references: [id])
+  cpileId   Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  startTime DateTime
+  endTime   DateTime
+  kW        Float
+  fee       Decimal
+  createdAt DateTime @default(now())
+}
+
+model RechargingTx {
+  id          Int      @id @default(autoincrement())
+  txId        String
+  paymentName String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  points      Int
+  balance     Int
+  amount      Decimal
+  txTime      DateTime
+  createdAt   DateTime @default(now())
+}
